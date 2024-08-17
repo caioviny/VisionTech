@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Certificado</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerador de Certificado</h1>
+        <form id="certForm">
+            <img src="../assets/img/visionTech.jpg" alt="" width="200">
+            <label for="name">Nome:</label>
+            <input list="suggestions" id="name" name="name" required>
+            <datalist id="suggestions">
+                <option value="Maria Silva">
+                <option value="João Souza">
+                <option value="Ana Pereira">
+            </datalist>
+            <br>
+            <label for="course">Curso:</label>
+            <select id="course" name="course" required>
+                <option value="Inglês Iniciante">Inglês Iniciante</option>
+                <option value="Comunicação Interpessoal">Comunicação Interpessoal</option>
+                <option value="Fotografia Profissional">Fotografia Profissional</option>
+            </select>
+            <br>
+            <button type="button" id="generateCertBtn">Gerar Certificado</button>
+        </form>
+    </div>
+
+    <style>
+        /* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background: #fff;
+    padding: 20px 40px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    text-align: center;
+}
+
+h1 {
+    color: #003366;
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+label {
+    font-size: 16px;
+    margin: 10px 0 5px;
+}
+
+input, select {
+    padding: 10px;
+    width: 80%;
+    max-width: 300px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+button {
+    background-color: #003366;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0055a5;
+}
+    </style>
+ 
+    <script>
+        document.getElementById('generateCertBtn').addEventListener('click', async () => {
+            const { jsPDF } = window.jspdf;
+
+            const name = document.getElementById('name').value;
+            const course = document.getElementById('course').value;
+
+            const qrCodeDataURL = await generateQRCode(name + ' - ' + course);
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 20;
+            const effectivePageWidth = pageWidth - 2 * margin;
+
+            doc.setFont('times', 'bold');
+            doc.setFontSize(28);
+            doc.setTextColor(0, 51, 102);
+            doc.text('CERTIFICADO', pageWidth / 2, margin + 40, { align: 'center' });
+
+            doc.setFont('times', 'normal');
+            doc.setFontSize(18);
+            doc.setTextColor(0, 0, 0);
+            doc.text('A VISION TECH confere o presente certificado a:', pageWidth / 2, margin + 60, { align: 'center' });
+
+            doc.setFont('times', 'italic');
+            doc.setFontSize(24);
+            doc.setTextColor(0, 51, 102);
+            doc.text(name, pageWidth / 2, margin + 80, { align: 'center' });
+
+            doc.setFont('times', 'normal');
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.text(
+                `Pela participação com êxito no curso de ${course}, realizado na VISION TECH. Parabéns por ter concluído essa jornada longa de aprendizado!`,
+                margin,
+                margin + 100,
+                { maxWidth: effectivePageWidth }
+            );
+
+            const currentDate = new Date().toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
+            doc.text(`Concluído em ${currentDate}`, margin, pageHeight - margin - 50);
+
+            doc.setLineWidth(0.5);
+            doc.line(margin, pageHeight - margin - 30, margin + 60, pageHeight - margin - 30);
+            doc.text('Assinatura', margin, pageHeight - margin - 20);
+
+            doc.addImage(qrCodeDataURL, 'PNG', pageWidth - margin - 40, pageHeight - margin - 40, 40, 40);
+
+            doc.save('certificado.pdf');
+        });
+
+        async function generateQRCode(text) {
+            return new Promise((resolve, reject) => {
+                QRCode.toDataURL(text, { errorCorrectionLevel: 'H' }, (err, url) => {
+                    if (err) reject(err);
+                    resolve(url);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
